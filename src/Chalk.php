@@ -177,11 +177,11 @@ class Chalk
         if ($this->isTwoStageFns($styleName)) {
             array_push($arguments, $offset);
 
-            return new StyleChain($this->getRgbStyle(...$arguments));
+            return new StyleChain($this->getRgbStyle(...$arguments), $this);
         } else if ($this->is256Color($styleName)) {
             $style = $this->get256Sequence($styleName, $offset);
         } else {
-            $style = self::STYLES[$styleName]($offset);
+            $style = $this->getStyle($styleName, $offset);
         }
 
         array_unshift($arguments, [$style]);
