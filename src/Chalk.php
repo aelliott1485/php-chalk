@@ -107,7 +107,7 @@ class Chalk
     private function parseStyleName($styleName)
     {
         $offset = 0;
-        if (!(strpos($styleName, 'bg') === false)) {
+        if (str_contains($styleName, 'bg')) {
             $offset = 10;
             preg_match('/^bg(\w+)$/', $styleName, $match);
             $styleName = lcfirst($match[1]);
@@ -155,7 +155,7 @@ class Chalk
             throw new InvalidStyleException($styleName);
         }
 
-        list($offset, $styleName) = $this->parseStyleName($styleName);
+        [$offset, $styleName] = $this->parseStyleName($styleName);
 
         if ($this->is256Color($styleName)) {
             $style = $this->get256Sequence($styleName, $offset);
@@ -172,7 +172,7 @@ class Chalk
             throw new InvalidStyleException($styleName);
         }
 
-        list($offset, $styleName) = $this->parseStyleName($styleName);
+        [$offset, $styleName] = $this->parseStyleName($styleName);
 
         if ($this->isTwoStageFns($styleName)) {
             array_push($arguments, $offset);
@@ -186,7 +186,7 @@ class Chalk
 
         array_unshift($arguments, [$style]);
 
-        return call_user_func_array([$this, 'apply'], $arguments);
+        return $this->apply(...$arguments);
     }
 
     public function apply()
