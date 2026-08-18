@@ -6,7 +6,7 @@ use TdTrung\OSRecognizer\OSRecognizer;
 class Chalk
 {
     const RESET = "\033[0m";
-    private $styles = [
+    private const STYLES = [
         'reset' => 0,
         'bold' => 1,
         'dim' => 2,
@@ -40,29 +40,27 @@ class Chalk
 
     public function __construct()
     {
-        $this->initSeqBuilders();
         $this->osRecognizer = new OSRecognizer;
         $this->checkColorSupport();
     }
 
-    private function initSeqBuilders()
-    {
-        foreach ($this->styles as $name => $code) {
-            $this->styles[$name] = function ($offset) use ($code) {
-                if ($code > 0)
-                    $code = $offset + $code;
-                return "\033[{$code}m";
-            };
-        }
+	public function getStyle($name, $offset): string
+	{
+		$code = self::STYLES[$name];
+		if ($code > 0) {
+			$code = $offset + $code;
+		}
+		return "\033[{$code}m";
+	}
 
-        $this->styles["rgb"] = function ($r, $g, $b, $offset) {
-            // TODO: Fallback to ANSI 256 if possible
-            if (!$this->has16mSupport()) return "";
+	public function getRgbStyle ($r, $g, $b, $offset): string
+	{
+		// TODO: Fallback to ANSI 256 if possible
+		if (!$this->has16mSupport()) return "";
 
-            $type = 38 + $offset;
-            return "\033[{$type};2;{$r};{$g};{$b}m";
-        };
-    }
+		$type = 38 + $offset;
+		return "\033[{$type};2;{$r};{$g};{$b}m";
+	}
 
     private function checkColorSupport()
     {
@@ -102,7 +100,8 @@ class Chalk
             $styleName = lcfirst($match[1]);
         }
 
-        return array_key_exists($styleName, $this->styles) || $this->is256Color($styleName);
+        return array_key_exists($styleName, self::STYLES) || $this->is256Color($styleName) 
+			|| $styleName === 'rgb';
     }
 
     private function parseStyleName($styleName)
@@ -161,7 +160,7 @@ class Chalk
         if ($this->is256Color($styleName)) {
             $style = $this->get256Sequence($styleName, $offset);
         } else {
-            $style = $this->styles[$styleName]($offset);
+            $style = $this->getStyle($styleName, $offset);
         }
 
         return new StyleChain($style, $this);
@@ -170,7 +169,7 @@ class Chalk
     public function __call($styleName, $arguments)
     {
         if (!$this->isValidStyle($styleName)) {
-            throw InvalidStyleException($styleName);
+            throw new InvalidStyleException($styleName);
         }
 
         list($offset, $styleName) = $this->parseStyleName($styleName);
@@ -178,14 +177,11 @@ class Chalk
         if ($this->isTwoStageFns($styleName)) {
             array_push($arguments, $offset);
 
-            return new StyleChain(
-                call_user_func_array($this->styles[$styleName], $arguments),
-                $this
-            );
+            return new StyleChain($this->getRgbStyle(...$arguments));
         } else if ($this->is256Color($styleName)) {
             $style = $this->get256Sequence($styleName, $offset);
         } else {
-            $style = $this->styles[$styleName]($offset);
+            $style = self::STYLES[$styleName]($offset);
         }
 
         array_unshift($arguments, [$style]);
