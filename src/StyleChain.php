@@ -21,15 +21,7 @@ class StyleChain
 
     public function __invoke()
     {
-        $arguments = func_get_args();
-
-        array_unshift($arguments, $this->styles);
-
-        return call_user_func_array(
-            [$this->colorInstance, 'apply'],
-
-            $arguments
-        );
+        return $this->colorInstance->apply($this->styles, ...func_get_args());
     }
 
     public function __get($prop)
@@ -44,10 +36,7 @@ class StyleChain
     {
 
         if ($this->colorInstance->isTwoStageFns($method)) {
-            $result = call_user_func_array(
-                [$this->colorInstance, $method],
-                $arguments
-            );
+            $result = $this->colorInstance->$method(...$arguments);
             $this->merge($result);
             return $this;
         }
@@ -55,7 +44,7 @@ class StyleChain
         $other = $this->colorInstance->{$method};
         $this->merge($other);
 
-        return call_user_func_array([$this, '__invoke'], $arguments);
+        return $this->__invoke(...$arguments);
     }
 
     private function merge(StyleChain $other)
