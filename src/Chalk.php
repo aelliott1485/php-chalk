@@ -1,8 +1,6 @@
 <?php
 namespace TdTrung\Chalk;
 
-use TdTrung\OSRecognizer\OSRecognizer;
-
 class Chalk
 {
     const RESET = "\033[0m";
@@ -34,13 +32,11 @@ class Chalk
     ];
 
     private $twoStageFns = ["rgb"];
-    private $osRecognizer;
     private $supportLevel = 0;
     private $enableColor = true;
 
     public function __construct()
     {
-        $this->osRecognizer = new OSRecognizer;
         $this->checkColorSupport();
     }
 
@@ -66,11 +62,10 @@ class Chalk
     {
         if (getenv('TERM') === 'dumb') {
             return 0;
-        } else if (strpos($this->osRecognizer->getPlatform(), 'win') !== false) {
+        } else if (PHP_OS_FAMILY === 'Windows') {
             // get os version and build
-            $release = explode('.', $this->osRecognizer->getRelease());
-            if (intval($release[0]) >= 10 && intval($release[1]) >= 10586) {
-                $this->supportLevel = intval($release[2]) >= 14931 ? 3 : 2;
+            if (PHP_WINDOWS_VERSION_MAJOR >= 10 && PHP_WINDOWS_VERSION_MINOR >= 10586) {
+                $this->supportLevel = PHP_WINDOWS_VERSION_BUILD >= 14931 ? 3 : 2;
                 return;
             }
 

@@ -21,7 +21,12 @@
             "TdTrung\\Chalk\\": "src/"
         }
     },
-    "require": {
-        "tdtrung17693/php-os-recognizer": "^1.0"
+    "autoload-dev": {
+        "psr-4": {
+            "TdTrung\\Chalk\\Tests\\": "tests/"
+        }
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^10"
     }
 }
